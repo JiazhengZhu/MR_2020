@@ -100,13 +100,14 @@ ivw_CI_upper = matrix(0, nrow = trials, ncol = 3)
 ivw_est = matrix(0, nrow = trials, ncol = 3)
 results = data.frame()
 
-pb = progress_bar$new(format = " [:bar] :percent eta: :eta",total = trials*length(measerror_list)*length(alpha_list))
-for (alphamax in alpha_list){
+pb <- progress_bar$new(  format = "[:bar] :percent eta: :eta",
+  total = trials*length(alpha_list)*length(measerror_list), clear = FALSE, width= 60)
+for (alphamax in alpha_list) {
   for (measerror in measerror_list){
     egg_coverage_count = ivw_coverage_count = rep(trials,3)
     egg_pwr_count = ivw_pwr_count = rep(trials,3)
     egg_int_coverage_count = 0
-    for (i in 1:trials){
+    for (i in 1:trials)  {
       pb$tick()
       m = simulate(nsamples, alphamax, beta, xerror, measerror, yerror)
       egg_CI_lower[i,] = m[[1]]@CILower.Est
@@ -136,6 +137,5 @@ for (alphamax in alpha_list){
                                         mean(egg_est[,3]),sd(egg_est[,3]),egg_coverage_count[3]/trials,egg_pwr_count[3]/trials,
                                         mean(ivw_est[,3]),sd(ivw_est[,3]),ivw_coverage_count[3]/trials,ivw_pwr_count[3]/trials,
                                         mean(egg_int_est),egg_int_coverage_count/trials))
-    
   }
 }
