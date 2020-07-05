@@ -139,3 +139,5 @@ for (alphamax in alpha_list) {
                                         mean(egg_int_est),egg_int_coverage_count/trials))
   }
 }
+
+write.csv(results, file = "results.csv")
