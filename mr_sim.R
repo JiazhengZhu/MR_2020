@@ -9,7 +9,7 @@ library(purrr)
 
 cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
-simulate = function(para_list){
+simulate_once = function(para_list){
   nsamples = para_list[[1]]
   alpha_max = para_list[[2]]
   beta = para_list[[3]]
@@ -121,7 +121,7 @@ trials = 20
 
 generate_data = function(trials, para_list){
   t = foreach(i=1:trials, .combine = rbind) %dopar% {
-    simulate(para_list)
+    simulate_once(para_list)
   }
   return(t)
 }
