@@ -2,12 +2,13 @@ library(plotly)
 library(plyr)
 library(MendelianRandomization)
 library(progress)
-library(parallel)
+library(doParallel)
 library(foreach)
 library(purrr)
 
-cluster <- makeCluster(detectCores()-1)
 
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
 simulate = function(para_list){
   nsamples = para_list[[1]]
   alpha_max = para_list[[2]]
