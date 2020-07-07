@@ -4,6 +4,7 @@ library(MendelianRandomization)
 library(progress)
 library(parallel)
 library(foreach)
+library(purrr)
 
 cluster <- makeCluster(detectCores()-1)
 
