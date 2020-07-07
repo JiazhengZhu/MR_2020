@@ -9,7 +9,38 @@ library(purrr)
 
 cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
-simulate_once = function(para_list){
+
+
+#true values
+nsamples = list(10)
+alpha_list = list(c(1,1,1),
+                  c(0.8,0.8,0.8),
+                  c(0.4,0.4,0.4),
+                  c(0.2,0.2,0.2))
+beta = list(c(0.2,-0.6,0.0))
+xerror = list(c(0.2,0.2,0.2))
+measerror_list = list(c(0,0,0),
+                      c(0.1,0,0),
+                      c(0.2,0,0),
+                      c(0.8,0,0),
+                      c(0,0.1,0),
+                      c(0,0.2,0),
+                      c(0,0.8,0),
+                      c(0,0,0.1),
+                      c(0,0,0.2),
+                      c(0,0,0.8),
+                      c(0.1,0.1,0.1),
+                      c(0.2,0.2,0.2),
+                      c(0.8,0.8,0.8))
+yerror = list(0.1)
+
+params_superlist = cross(list(nsamples, alpha_list, beta, xerror, measerror_list, yerror))
+
+trials = 20
+
+generate_data = function(trials, para_list){
+  t = foreach(i=1:trials, .combine = rbind) %dopar% {
+    simulate_once = function(para_list){
   nsamples = para_list[[1]]
   alpha_max = para_list[[2]]
   beta = para_list[[3]]
@@ -91,36 +122,6 @@ simulate_once = function(para_list){
   return(data.frame(t(ans)))
   
 }
-
-#true values
-nsamples = list(10)
-alpha_list = list(c(1,1,1),
-                  c(0.8,0.8,0.8),
-                  c(0.4,0.4,0.4),
-                  c(0.2,0.2,0.2))
-beta = list(c(0.2,-0.6,0.0))
-xerror = list(c(0.2,0.2,0.2))
-measerror_list = list(c(0,0,0),
-                      c(0.1,0,0),
-                      c(0.2,0,0),
-                      c(0.8,0,0),
-                      c(0,0.1,0),
-                      c(0,0.2,0),
-                      c(0,0.8,0),
-                      c(0,0,0.1),
-                      c(0,0,0.2),
-                      c(0,0,0.8),
-                      c(0.1,0.1,0.1),
-                      c(0.2,0.2,0.2),
-                      c(0.8,0.8,0.8))
-yerror = list(0.1)
-
-params_superlist = cross(list(nsamples, alpha_list, beta, xerror, measerror_list, yerror))
-
-trials = 20
-
-generate_data = function(trials, para_list){
-  t = foreach(i=1:trials, .combine = rbind) %dopar% {
     simulate_once(para_list)
   }
   return(t)
