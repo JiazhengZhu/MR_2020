@@ -7,8 +7,8 @@ library(foreach)
 registerDoParallel(detectCores())
 
 get_population_data = function(n_samples, n_snp, prob_snp, alpha_lim, beta_vec, xerror_vec, yerror, measerror_vec) {
-  alpha_mat = cbind(runif(15, min=alpha_lim[1], max = alpha_lim[2]), runif(15, min=alpha_lim[1], max = alpha_lim[2]))
-  n_exposures = length(alpha_lim)
+  alpha_mat = cbind(runif(n_snp, min=alpha_lim[1], max = alpha_lim[2]), runif(n_snp, min=alpha_lim[1], max = alpha_lim[2]))
+  n_exposures = length(beta_vec)
   g = matrix(rbinom(n_snp*n_samples,2,prob_snp), ncol = n_snp, nrow = n_samples)
   exposures = g%*%alpha_mat + t(t(matrix(rnorm(n_samples*n_exposures), ncol = n_exposures, nrow = n_samples))*xerror_vec)
   
