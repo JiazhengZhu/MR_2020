@@ -4,7 +4,7 @@ library(purrr)
 library(doParallel)
 library(foreach)
 
-registerDoParallel(detectCores())
+registerDoParallel(detectCores()*2)
 
 get_population_data = function(n_samples, n_snp, prob_snp, alpha_lim, beta_vec, xerror_vec, yerror, measerror_vec) {
   alpha_mat = cbind(runif(n_snp, min=alpha_lim[1], max = alpha_lim[2]), runif(n_snp, min=alpha_lim[1], max = alpha_lim[2]))
@@ -149,14 +149,14 @@ load_sim_params = function(rp, n_sam, nn_snp, p_snp, xe_vec, ye) {
 }
 
 repeats = 2000
-n_samples = 2000
+n_samples = 1000
 n_snp = 20
 prob_snp = 0.5
-alpha_lim = list(c(0.6,0.8), c(0.4,0.6), c(0.2,0.4))
+alpha_lim = list(c(1.4,1.6), c(0.6,0.8), c(0.4,0.6))
 beta_vec = list(c(2,0.0),c(1,0.0), c(2,1.0), c(2, -1))
-xerror_vec = c(1,1)
-yerror = 1
-measerror_vec = list(c(0,0.0), c(1,0.0), c(2,0.0), c(3,0), c(1,1), c(2,2), c(3,3))
+xerror_vec = c(0.1,0.1)
+yerror = 0.1
+measerror_vec = list(c(0,0.0), c(0.5,0.0), c(1,0.0), c(1.5,0), c(0.5,0.5), c(1,1), c(1.5,1.5))
 
 params_superlist = cross(list(alpha_lim, beta_vec, measerror_vec))
 
