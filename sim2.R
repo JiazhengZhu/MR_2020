@@ -3,6 +3,7 @@ library(progress)
 library(purrr)
 library(doParallel)
 library(foreach)
+library(AER)
 
 registerDoParallel(detectCores())
 
@@ -84,6 +85,7 @@ sim_repeats = function(repeats, n_samples, n_snp, prob_snp, alpha_lim, beta_vec,
   ivw_CI_lower = matrix(0, nrow = repeats, ncol = n_exposures)
   ivw_CI_upper = matrix(0, nrow = repeats, ncol = n_exposures)
   ivw_est = matrix(0, nrow = repeats, ncol = n_exposures)
+  F1_iv = F2_iv = rep(0, repeats)
   
   egg_coverage_count = ivw_coverage_count = rep(repeats,n_exposures)
   egg_pwr_count = ivw_pwr_count = rep(repeats,n_exposures)
@@ -99,25 +101,35 @@ sim_repeats = function(repeats, n_samples, n_snp, prob_snp, alpha_lim, beta_vec,
     #G-Y
     dat = get_population_data(n_samples, n_snp, prob_snp, alpha_mat, beta_vec, xerror_vec, yerror, measerror_vec, x1x2_cor)
     res = get_firststage_values(dat, choice = "all")
-    # bx = res[[1]]
-    # bxse = res[[2]]
-    # by = res[[3]]
-    # byse = res[[4]]
+    by = res[[3]]
+    byse = res[[4]]
+    #fit
+    m = get_mv_models(res) #list(bx,bxse,by,byse))
     
     # #G-X
     # dat = get_population_data(n_samples, n_snp, prob_snp, alpha_mat, beta_vec, xerror_vec, yerror, measerror_vec, x1x2_cor)
     # res = get_firststage_values(dat, choice = "gx")
     # bx = res[[1]]
     # bxse = res[[2]]
-    
+    # 
     # dat = get_population_data(n_samples, n_snp, prob_snp, alpha_mat, beta_vec, xerror_vec, yerror, measerror_vec, x1x2_cor)
     # res = get_firststage_values(dat, choice = "gx")
     # bx[,2] = res[[1]][,2]
     # bxse[,2] = res[[2]][,2]
     # 
+    # f_stat_model = format_mvmr(bx,by,bxse,byse)
+    # cov_mat = snpcov_mvmr(data.frame(dat[[1]]),data.frame(dat[[2]]))
     
-    #fit
-    m = get_mv_models(res) #list(bx,bxse,by,byse))
+    x1 = dat[[2]][,1]
+    x2 = dat[[2]][,2]
+    
+    reg1 = ivreg(x1~ x2 |G)
+    uhat = reg1$residuals
+    F1_iv[i] = summary(lm(uhat~ G))$fstatistic[1]
+    
+    reg2 = ivreg(x2~ x1 |G)
+    uhat2 = reg2$residuals
+    F2_iv[i] = summary(lm(uhat2~ G))$fstatistic[1]
     
     egg_CI_lower[i,] = m[[1]]@CILower.Est
     egg_CI_upper[i,] = m[[1]]@CIUpper.Est
@@ -141,7 +153,7 @@ sim_repeats = function(repeats, n_samples, n_snp, prob_snp, alpha_lim, beta_vec,
     result = cbind(result, data.frame(mean(egg_est[,k]),sd(egg_est[,k]),egg_coverage_count[k]/repeats,egg_pwr_count[k]/repeats,
                                       mean(ivw_est[,k]),sd(ivw_est[,k]),ivw_coverage_count[k]/repeats,ivw_pwr_count[k]/repeats))
   }
-  result = cbind(result, data.frame(mean(egg_int_est),egg_int_coverage_count/repeats))
+  result = cbind(result, data.frame(mean(egg_int_est),egg_int_coverage_count/repeats), mean(F1_iv), mean(F2_iv))
   return(result)
 }
 
@@ -152,14 +164,14 @@ load_sim_params = function(rp, n_sam, nn_snp, p_snp, xe_vec, ye) {
   return(wrapped)
 }
 
-repeats = 20
-n_samples = 1000
+repeats = 1000
+n_samples = 5000
 n_snp = 20
-prob_snp = 0.5
+prob_snp = 0.4
 alpha_lim = list(c(1,1), c(0.6,0.8), c(0.4,0.6))
 beta_vec = list(c(2,1.0),c(1,0.0), c(2,1.0), c(2, -1))
-xerror_vec = c(0.,0.)
-yerror = 0.
+xerror_vec = c(0.2,0.2)
+yerror = 0.2
 measerror_vec = list(c(0,0.0), c(0.5,0.0), c(1,0.0), c(1.5,0), c(0.5,0.5), c(1,1), c(1.5,1.5))
 cor_list = list(0,0.2,0.4,0.8)
 
@@ -171,8 +183,6 @@ res_tab = foreach(i = params_superlist, .combine = rbind, .packages = c("Mendeli
 }
 
 write.csv(res_tab, paste0("par_res", format(Sys.time(), "%d-%b-%Y %H.%M"), ".csv"))
-
-# tab_dep = sim_repeats(repeats, n_samples, n_snp, prob_snp, alpha_lim, beta_vec, xerror_vec, yerror, measerror_vec)
 
 stopImplicitCluster()
 
