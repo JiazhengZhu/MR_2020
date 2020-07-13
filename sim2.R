@@ -122,6 +122,7 @@ sim_repeats = function(repeats, n_samples, n_snp, prob_snp, alpha_lim, beta_vec,
     
     x1 = dat[[2]][,1]
     x2 = dat[[2]][,2]
+    G = dat[[1]]
     
     reg1 = ivreg(x1~ x2 |G)
     uhat = reg1$residuals
@@ -177,7 +178,7 @@ cor_list = list(0,0.2,0.4,0.8)
 
 params_superlist = cross(list(alpha_lim, beta_vec, measerror_vec, cor_list))
 
-res_tab = foreach(i = params_superlist, .combine = rbind, .packages = c("MendelianRandomization", "progress")) %dopar% {
+res_tab = foreach(i = params_superlist, .combine = rbind, .packages = c("MendelianRandomization", "progress", "AER")) %dopar% {
   f = load_sim_params(repeats, n_samples, n_snp, prob_snp, xerror_vec, yerror)
   return(f(i))
 }
